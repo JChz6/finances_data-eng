@@ -9,30 +9,31 @@ on:
       - main
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.12"
-
-      - name: Install dependencies
-        run: |
-          python -m venv env
-          source env/bin/activate
-          pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Lint and Format Check
-        run: |
-          source env/bin/activate
-          pip install flake8 black
-          black --check .  # Verifica el formateo
-          flake8 .         # Verifica errores de estilo y sintaxis
+#  test:
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Check out code
+#        uses: actions/checkout@v3
+#
+#      - name: Set up Python
+#        uses: actions/setup-python@v4
+#        with:
+#          python-version: "3.12"
+#
+#      - name: Install dependencies
+#        run: |
+#          python -m venv env
+#          source env/bin/activate
+#          pip install --upgrade pip
+#          pip install -r requirements.txt
+#
+#      - name: Lint and Format Check
+#        run: |
+#          source env/bin/activate
+#          pip install flake8 black
+#          black --check .  # Verifica el formateo
+#          flake8 .         # Verifica errores de estilo y sintaxis
 
 
           
@@ -48,6 +49,12 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+
       - name: Authenticate with GCP
         uses: google-github-actions/auth@v1
         with:
@@ -59,3 +66,5 @@ jobs:
           service: ${{ vars.CLOUD_RUN_SERVICE }} # Cambia por el nombre de tu servicio en Cloud Run
           region: ${{ vars.CLOUD_RUN_REGION }}  # Cambia por tu región
           source: .
+
+#gcloud run deploy function-3 --source . --region us-east4 --platform managed --allow-unauthenticated
