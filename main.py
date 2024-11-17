@@ -3,6 +3,8 @@ import pandas as pd
 from google.cloud import bigquery, storage
 import functions_framework
 import logging
+#SI ESTO APARECE EN CLOUD RUN
+#ES PORQUE SALIÓ BIEN
 
 # Configurar el logging
 logging.basicConfig(level=logging.INFO)

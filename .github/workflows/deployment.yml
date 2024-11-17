@@ -51,11 +51,11 @@ jobs:
       - name: Authenticate with GCP
         uses: google-github-actions/auth@v1
         with:
-          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+          credentials_json: ${{ secrets.CREDS_GCP }}
 
       - name: Deploy to Cloud Run
         uses: google-github-actions/deploy-cloudrun@v1
         with:
-          service: "your-cloud-run-service-name" # Cambia por el nombre de tu servicio en Cloud Run
-          region: "us-central1"  # Cambia por tu región
+          service: ${{ vars.CLOUD_RUN_SERVICE }} # Cambia por el nombre de tu servicio en Cloud Run
+          region: ${{ vars.CLOUD_RUN_REGION }}  # Cambia por tu región
           source: .
