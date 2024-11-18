@@ -5,6 +5,7 @@ import functions_framework
 import logging
 #SI ESTO APARECE EN CLOUD RUN
 #ES PORQUE SALIÓ BIEN
+#0
 
 # Configurar el logging
 logging.basicConfig(level=logging.INFO)
