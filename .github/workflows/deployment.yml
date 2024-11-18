@@ -44,27 +44,23 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Cloud Functions Deploy
+        uses: google-github-actions/deploy-cloud-functions@v0.1.2
         with:
-          python-version: "3.12"
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-
-      - name: Authenticate with GCP
-        uses: google-github-actions/auth@v1
-        with:
-          credentials_json: ${{ secrets.CREDS_GCP }}
-
-      - name: Deploy to Cloud Run
-        uses: google-github-actions/deploy-cloudrun@v1
-        with:
-          service: ${{ vars.CLOUD_RUN_SERVICE }} # Cambia por el nombre de tu servicio en Cloud Run
-          region: ${{ vars.CLOUD_RUN_REGION }}  # Cambia por tu región
-          source: .
-
-#gcloud run deploy function-3 --source . --region us-east4 --platform managed --allow-unauthenticated
+          credentials: ${{ secrets.CREDS_GCP }}
+          name: python-hello-world-cf
+          description: Test python cloud function # nullable
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          region: ${{ vars.CLOUD_RUN_REGION }}
+          source_dir: src
+          # name of our function in our main.py file, defaults to the resource name suffix 
+          entry_point: handle_gcs_event
+          # runtime to use for the function
+          runtime: python311
+          # the function execution timeout
+          timeout: 60
+          # the maximum number of instances for the function.
+          max_instances: 1
+          # optional configs, see google-cloud-actions/deploy-cloud-functions for full reference
+          # list of key-value pairs to set as environment variables in the form KEY1=VALUE1,KEY2=VALUE2.
+#       env_vars: # optional
