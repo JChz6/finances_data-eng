@@ -3,67 +3,37 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - main 
+      - main
   pull_request:
     branches:
       - main
   workflow_dispatch:
 
 jobs:
-
-#  test:
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Check out code
-#        uses: actions/checkout@v3
-#
-#      - name: Set up Python
-#        uses: actions/setup-python@v4
-#        with:
-#          python-version: "3.12"
-#
-#      - name: Install dependencies
-#        run: |
-#          python -m venv env
-#          source env/bin/activate
-#          pip install --upgrade pip
-#          pip install -r requirements.txt
-#
-#      - name: Lint and Format Check
-#        run: |
-#          source env/bin/activate
-#          pip install flake8 black
-#          black --check .  # Verifica el formateo
-#          flake8 .         # Verifica errores de estilo y sintaxis
-
-
-          
-
   deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
         uses: actions/checkout@v3
 
-      - name: Cloud Functions Deploy
+      - name: Authenticate with GCP
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.CREDS_GCP }}
+
+      - name: Deploy to Cloud Functions
         uses: google-github-actions/deploy-cloud-functions@v2
         with:
-          secret_environment_variables: ${{ secrets.CREDS_GCP }}
           name: finanzas-personales-deploy
-          description: Test python cloud function # nullable
+          description: Test python cloud function
           project_id: ${{ secrets.GCP_PROJECT_ID }}
-          region: ${{ vars.CLOUD_RUN_REGION }}
+          region: us-east4
           source_dir: .
-          # name of our function in our main.py file, defaults to the resource name suffix 
           entry_point: handle_gcs_event
-          # runtime to use for the function
           runtime: python310
-          # the function execution timeout
           timeout: 60
-          # the maximum number of instances for the function.
           max_instances: 1
-          # optional configs, see google-cloud-actions/deploy-cloud-functions for full reference
-          # list of key-value pairs to set as environment variables in the form KEY1=VALUE1,KEY2=VALUE2.
-#       env_vars: # optional 
           event_trigger_type: google.storage.object.finalize
           event_trigger_resource: projects/_/buckets/finanzas_personales_raw
+          event_trigger_retry: false
+          deploy_timeout: 300
