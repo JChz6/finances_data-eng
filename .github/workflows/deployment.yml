@@ -52,7 +52,7 @@ jobs:
           description: Test python cloud function # nullable
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           region: ${{ vars.CLOUD_RUN_REGION }}
-          source_dir: src
+          source_dir: main.py
           # name of our function in our main.py file, defaults to the resource name suffix 
           entry_point: handle_gcs_event
           # runtime to use for the function
