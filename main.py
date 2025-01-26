@@ -42,7 +42,8 @@ def upload_to_bigquery(df, table_id):
             bigquery.SchemaField("nota", "STRING"),
             bigquery.SchemaField("ingreso_gasto", "STRING"),
             bigquery.SchemaField("importe", "FLOAT64"),
-            bigquery.SchemaField("moneda", "STRING")
+            bigquery.SchemaField("moneda", "STRING"),
+            bigquery.SchemaField("comentario", "STRING")
         ],
         source_format=bigquery.SourceFormat.PARQUET,
     )
@@ -80,6 +81,7 @@ def handle_gcs_event(cloud_event):
                 'Subcategorías': 'subcategoria',
                 'Nota': 'nota',
                 'Ingreso/Gasto': 'ingreso_gasto',
+                'Descripción':'comentario',
                 'PEN': 'importe',
                 'Moneda': 'moneda'
             }, inplace=True)
