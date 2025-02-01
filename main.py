@@ -85,6 +85,11 @@ def handle_gcs_event(cloud_event):
                 'PEN': 'importe',
                 'Moneda': 'moneda'
             }, inplace=True)
+            df['categoria'] = df['categoria'].str.strip()
+            df['subcategoria'] = df['subcategoria'].str.strip()
+            df['nota'] = df['nota'].str.strip()
+            df['ingreso_gasto'] = df['ingreso_gasto'].str.strip()
+            df['comentario'] = df['comentario'].str.strip()
             logging.info("Datos transformados correctamente para el archivo .xlsx")
             upload_to_bigquery(df, 'big-query-406221.finanzas_personales.historico')
 
