@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+import datetime
 from google.cloud import bigquery, storage
 import functions_framework
 import logging
@@ -43,7 +44,8 @@ def upload_to_bigquery(df, table_id):
             bigquery.SchemaField("ingreso_gasto", "STRING"),
             bigquery.SchemaField("importe", "FLOAT64"),
             bigquery.SchemaField("moneda", "STRING"),
-            bigquery.SchemaField("comentario", "STRING")
+            bigquery.SchemaField("comentario", "STRING"),
+            bigquery.SchemaField("fecha_carga", "DATETIME")
         ],
         source_format=bigquery.SourceFormat.PARQUET,
     )
@@ -90,6 +92,7 @@ def handle_gcs_event(cloud_event):
             df['nota'] = df['nota'].str.strip()
             df['ingreso_gasto'] = df['ingreso_gasto'].str.strip()
             df['comentario'] = df['comentario'].str.strip()
+            df['fecha_carga'] = datetime.now()
             logging.info("Datos transformados correctamente para el archivo .xlsx")
             upload_to_bigquery(df, 'big-query-406221.finanzas_personales.historico')
 
