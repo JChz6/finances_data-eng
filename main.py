@@ -5,9 +5,7 @@ import pytz
 from google.cloud import bigquery, storage
 import functions_framework
 import logging
-#SI ESTO APARECE EN CLOUD RUN
-#ES PORQUE SALIÓ BIEN
-#0
+
 
 utc_minus_5 = pytz.timezone('America/Lima')
 
@@ -96,7 +94,7 @@ def handle_gcs_event(cloud_event):
             df['ingreso_gasto'] = df['ingreso_gasto'].str.strip()
             df['comentario'] = df['comentario'].str.strip()
             df['fecha_carga'] = datetime.now(pytz.utc).astimezone(utc_minus_5)
-            
+            df['fecha_carga'] = df['fecha_carga'].dt.tz_localize(None)
             logging.info("Datos transformados correctamente para el archivo .xlsx")
             upload_to_bigquery(df, 'big-query-406221.finanzas_personales.historico')
 
