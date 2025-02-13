@@ -9,7 +9,7 @@ import logging
 #ES PORQUE SALIÓ BIEN
 #0
 
-utc_minus_5 = pytz.timezone('America/Bogota')
+utc_minus_5 = pytz.timezone('America/Lima')
 
 # Configurar el logging
 logging.basicConfig(level=logging.INFO)
