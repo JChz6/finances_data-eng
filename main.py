@@ -115,6 +115,8 @@ def handle_gcs_event(cloud_event):
                 .str.strip()
                 .astype(float)
                 )
+            
+            df['dias_trabajados'] = pd.to_numeric(df['dias_trabajados'], errors='coerce')
 
             logging.info("Datos transformados correctamente para el archivo .xlsx")
             upload_to_bigquery(df, 'big-query-406221.finanzas_personales.historico')
