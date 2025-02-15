@@ -99,15 +99,22 @@ def handle_gcs_event(cloud_event):
             
             
             # Convertir la columna 'comentario' a string, normalizar y buscar la cadena
-            mask = df['comentario'].astype(str).str.replace('í', 'i').str.lower().str.contains('dias trabajados')
+            mask = (
+                df['comentario']
+                    .astype(str)
+                    .str.replace('í', 'i')
+                    .str.lower()
+                    .str.contains('dias trabajados')
+                )
 
             df.loc[mask, 'dias_trabajados'] = (
                 df.loc[mask, 'comentario']
+                .str.replace('í', 'i')  # Eliminar acento en 'í'
+                .str.lower()  # Convertir a minúsculas
                 .str.replace('dias trabajados', '', case=False, regex=False)
                 .str.strip()
                 .astype(float)
-            )
-
+                )
 
             logging.info("Datos transformados correctamente para el archivo .xlsx")
             upload_to_bigquery(df, 'big-query-406221.finanzas_personales.historico')
