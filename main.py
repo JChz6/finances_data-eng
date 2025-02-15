@@ -47,7 +47,7 @@ def upload_to_bigquery(df, table_id):
             bigquery.SchemaField("moneda", "STRING"),
             bigquery.SchemaField("comentario", "STRING"),
             bigquery.SchemaField("fecha_carga", "DATETIME"),
-            bigquery.SchemaField("dias_trabajados", "NUMERIC")
+            bigquery.SchemaField("dias_trabajados", "FLOAT64")
         ],
         source_format=bigquery.SourceFormat.PARQUET,
     )
@@ -116,7 +116,7 @@ def handle_gcs_event(cloud_event):
                 .astype(float)
                 )
             
-            df['dias_trabajados'] = pd.to_numeric(df['dias_trabajados'], errors='coerce')
+            #df['dias_trabajados'] = pd.to_numeric(df['dias_trabajados'], errors='coerce')
 
             logging.info("Datos transformados correctamente para el archivo .xlsx")
             upload_to_bigquery(df, 'big-query-406221.finanzas_personales.historico')
