@@ -46,7 +46,8 @@ def upload_to_bigquery(df, table_id):
             bigquery.SchemaField("importe", "FLOAT64"),
             bigquery.SchemaField("moneda", "STRING"),
             bigquery.SchemaField("comentario", "STRING"),
-            bigquery.SchemaField("fecha_carga", "DATETIME")
+            bigquery.SchemaField("fecha_carga", "DATETIME"),
+            bigquery.SchemaField("dias_trabajados", "NUMERIC")
         ],
         source_format=bigquery.SourceFormat.PARQUET,
     )
@@ -95,6 +96,19 @@ def handle_gcs_event(cloud_event):
             df['comentario'] = df['comentario'].str.strip()
             df['fecha_carga'] = datetime.now(pytz.utc).astimezone(utc_minus_5)
             df['fecha_carga'] = df['fecha_carga'].dt.tz_localize(None)
+            
+            
+            # Convertir la columna 'comentario' a string, normalizar y buscar la cadena
+            mask = df['comentario'].astype(str).str.replace('í', 'i').str.lower().str.contains('dias trabajados')
+
+            df.loc[mask, 'dias_trabajados'] = (
+                df.loc[mask, 'comentario']
+                .str.replace('dias trabajados', '', case=False, regex=False)
+                .str.strip()
+                .astype(float)
+            )
+
+
             logging.info("Datos transformados correctamente para el archivo .xlsx")
             upload_to_bigquery(df, 'big-query-406221.finanzas_personales.historico')
 
