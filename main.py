@@ -44,7 +44,7 @@ def presup_to_bigquery_temp(df, table_id, temp_table_id):
             bigquery.SchemaField("categoria", "STRING"),
             bigquery.SchemaField("presupuesto", "FLOAT64")
         ],
-        source_format = bigquery.SourceFormat.CSV,
+        source_format = bigquery.SourceFormat.PARQUET,
     )
 
     job = client.load_table_from_dataframe(df, temp_table_id, job_config=job_config)
