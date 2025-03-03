@@ -12,6 +12,7 @@ utc_minus_5 = pytz.timezone('America/Lima')
 # Configurar el logging
 logging.basicConfig(level=logging.INFO)
 
+'''
 # Cargar los presupuestos
 def presup_to_bigquery(df, table_id):
     client = bigquery.Client()
@@ -29,7 +30,47 @@ def presup_to_bigquery(df, table_id):
     job = client.load_table_from_dataframe(df, table_id, job_config=job_config)
     job.result()
     logging.info(f"Cargado {job.output_rows} filas en {table_id}")
+'''
 
+def presup_to_bigquery_temp(df, table_id, temp_table_id):
+    client = bigquery.Client()
+
+    job_config = bigquery.LoadJobConfig(
+        write_disposition = bigquery.WriteDisposition.WRITE_TRUNCATE,
+        schema = [
+            bigquery.SchemaField("fecha", "DATE"),
+            bigquery.SchemaField("year", "STRING"),
+            bigquery.SchemaField("month", "STRING"),
+            bigquery.SchemaField("categoria", "STRING"),
+            bigquery.SchemaField("presupuesto", "FLOAT64")
+        ],
+        source_format = bigquery.SourceFormat.CSV,
+    )
+
+    job = client.load_table_from_dataframe(df, temp_table_id, job_config=job_config)
+    job.result()
+    logging.info(f"Cargado el presupuesto en la temporal {temp_table_id}")
+
+    merge_query = f'''
+    MERGE `{table_id}` AS target
+    USING `{temp_table_id}` AS source
+    ON target.fecha = source.fecha AND target.categoria = source.categoria
+    WHEN MATCHED THEN
+        UPDATE SET
+            target.presupuesto = source.presupuesto,
+            target.year = source.year,
+            target.month = source.month
+    WHEN NOT MATCHED THEN
+        INSERT (fecha, year, month, categoria, presupuesto)
+        VALUES (source.fecha, source.year, source.month, source.categoria, source.presupuesto);
+    '''
+    query_job = client.query(merge_query)
+    query_job.result()
+    logging.info(f"MERGE de presupuesto en {table_id}")
+
+    # Eliminar la tabla temporal
+    client.delete_table(temp_table_id, not_found_ok=True)
+    logging.info(f"ELIMINADA temporal: {temp_table_id}")
 
 #Cargar los registros
 def upload_to_bigquery(df, table_id):
@@ -132,7 +173,9 @@ def handle_gcs_event(cloud_event):
             df['month'] = df['month'].astype(str) 
             df = df[['fecha', 'year', 'month', 'categoria', 'presupuesto']]
             logging.info("Datos transformados correctamente para el archivo .csv")
-            presup_to_bigquery(df, 'big-query-406221.finanzas_personales.presupuesto')
+            
+            temp_table_id = "big-query-406221.finanzas_personales.temp_presupuesto"
+            presup_to_bigquery_temp(df, 'big-query-406221.finanzas_personales.presupuesto', temp_table_id)
 
 
 
