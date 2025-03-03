@@ -165,6 +165,7 @@ def handle_gcs_event(cloud_event):
         elif file_name.endswith('.csv'):
             df = pd.read_csv(temp_file_path, delimiter = ';', encoding='latin1')
             # Realizar las transformaciones necesarias y cargar a BigQuery
+            df = df.dropna(subset=['fecha'])
             df['fecha'] = pd.to_datetime(df['fecha']).dt.strftime('%Y-%m-%d')
             df['fecha'] = pd.to_datetime(df['fecha'])
             df['year'] = df['year'].astype(int).astype(str)
