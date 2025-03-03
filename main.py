@@ -167,11 +167,10 @@ def handle_gcs_event(cloud_event):
             # Realizar las transformaciones necesarias y cargar a BigQuery
             df['fecha'] = pd.to_datetime(df['fecha']).dt.strftime('%Y-%m-%d')
             df['fecha'] = pd.to_datetime(df['fecha'])
-            df['year'] = round(df['year'], 0)
-            df['month'] = round(df['month'], 0)
-            df['year'] = df['year'].astype(str)
-            df['month'] = df['month'].astype(str) 
+            df['year'] = df['year'].astype(int).astype(str)
+            df['month'] = df['month'].astype(int).astype(str) 
             df = df[['fecha', 'year', 'month', 'categoria', 'presupuesto']]
+            df = df.dropna(subset=['fecha'])
             logging.info("Datos transformados correctamente para el archivo .csv")
             
             temp_table_id = "big-query-406221.finanzas_personales.temp_presupuesto"
