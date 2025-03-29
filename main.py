@@ -31,6 +31,7 @@ def presup_to_bigquery(df, table_id):
     job = client.load_table_from_dataframe(df, table_id, job_config=job_config)
     job.result()
     logging.info(f"Cargado {job.output_rows} filas en {table_id}")
+'''
 
 #Elimina registros existentes del mes que va a ingresar
 def delete_old_data_from_bigquery(year_months, table_id):
@@ -154,7 +155,7 @@ def handle_gcs_event(cloud_event):
             logging.info("Datos transformados correctamente para el archivo .csv")
             
             temp_table_id = "big-query-406221.finanzas_personales.temp_presupuesto"
-            presup_to_bigquery_temp(df, 'big-query-406221.finanzas_personales.presupuesto', temp_table_id)
+            #presup_to_bigquery_temp(df, 'big-query-406221.finanzas_personales.presupuesto', temp_table_id)
 
 
 
