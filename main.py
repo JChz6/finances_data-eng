@@ -13,6 +13,7 @@ utc_minus_5 = pytz.timezone('America/Lima')
 # Configurar el logging
 logging.basicConfig(level=logging.INFO)
 
+'''
 # Cargar los presupuestos
 def presup_to_bigquery(df, table_id):
     client = bigquery.Client()
@@ -143,15 +144,17 @@ def handle_gcs_event(cloud_event):
         elif file_name.endswith('.csv'):
             df = pd.read_csv(temp_file_path, delimiter = ';', encoding='latin1')
             # Realizar las transformaciones necesarias y cargar a BigQuery
+            df = df.dropna(subset=['fecha'])
             df['fecha'] = pd.to_datetime(df['fecha']).dt.strftime('%Y-%m-%d')
             df['fecha'] = pd.to_datetime(df['fecha'])
-            df['year'] = round(df['year'], 0)
-            df['month'] = round(df['month'], 0)
-            df['year'] = df['year'].astype(str)
-            df['month'] = df['month'].astype(str) 
+            df['year'] = df['year'].astype(int).astype(str)
+            df['month'] = df['month'].astype(int).astype(str) 
             df = df[['fecha', 'year', 'month', 'categoria', 'presupuesto']]
+            df = df.dropna(subset=['fecha'])
             logging.info("Datos transformados correctamente para el archivo .csv")
-            presup_to_bigquery(df, 'big-query-406221.finanzas_personales.presupuesto')
+            
+            temp_table_id = "big-query-406221.finanzas_personales.temp_presupuesto"
+            presup_to_bigquery_temp(df, 'big-query-406221.finanzas_personales.presupuesto', temp_table_id)
 
 
 
