@@ -142,17 +142,8 @@ def handle_gcs_event(cloud_event):
                 )
             
 
-            # Busca claves en la columna "comentario"
-            mask_clave_valor = (
-                df['comentario']
-                    .astype(str)
-                    .str.contains(r'^\s*[^\s/]+/\s*\S+', regex=True)
-                )            
-
-            df.loc[mask_clave_valor, ['clave', 'valor']] = (
-                    df.loc[mask_clave_valor, 'comentario']
-                      .str.extract(r'^\s*([^\s/]+)/\s*(\S+)')
-                )
+            # Busca claves y valores en la columna "comentario"
+            df[['clave', 'valor']] = df['comentario'].str.extract(r'^\s*([^\s/]+/)\s*(\S+)', expand=True)
 
             logging.info("✅ Datos transformados correctamente para el archivo .xlsx")
             upload_to_bigquery(df.drop(columns=["anio_mes"]), 'big-query-406221.finanzas_personales.historico')
