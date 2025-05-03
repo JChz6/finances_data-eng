@@ -63,7 +63,9 @@ def upload_to_bigquery(df, table_id):
             bigquery.SchemaField("moneda", "STRING"),
             bigquery.SchemaField("comentario", "STRING"),
             bigquery.SchemaField("fecha_carga", "DATETIME"),
-            bigquery.SchemaField("dias_trabajados", "FLOAT64")
+            bigquery.SchemaField("dias_trabajados", "FLOAT64"),
+            bigquery.SchemaField("clave", "STRING"),
+            bigquery.SchemaField("valor", "STRING")
         ],
         source_format=bigquery.SourceFormat.PARQUET,
     )
@@ -122,7 +124,7 @@ def handle_gcs_event(cloud_event):
             delete_old_data_from_bigquery(unique_year_months, table_id)
 
             # Convertir la columna 'comentario' a string, normalizar y buscar la cadena
-            mask = (
+            mask_dias_trabajados = (
                 df['comentario']
                     .astype(str)
                     .str.replace('í', 'i')
@@ -130,15 +132,28 @@ def handle_gcs_event(cloud_event):
                     .str.contains('dias trabajados')
                 )
 
-            df.loc[mask, 'dias_trabajados'] = (
-                df.loc[mask, 'comentario']
+            df.loc[mask_dias_trabajados, 'dias_trabajados'] = (
+                df.loc[mask_dias_trabajados, 'comentario']
                 .str.replace('í', 'i')  # Eliminar acento en 'í'
                 .str.lower()  # Convertir a minúsculas
                 .str.replace('dias trabajados', '', case=False, regex=False)
                 .str.strip()
                 .astype(float)
                 )
-           
+            
+
+            # Busca claves en la columna "comentario"
+            mask_clave_valor = (
+                df['comentario']
+                    .astype(str)
+                    .str.contains(r'^\s*[^\s/]+/\s*\S+', regex=True)
+                )            
+
+            df.loc[mask_clave_valor, ['clave', 'valor']] = (
+                    df.loc[mask_clave_valor, 'comentario']
+                      .str.extract(r'^\s*([^\s/]+)/\s*(\S+)')
+                )
+
             logging.info("✅ Datos transformados correctamente para el archivo .xlsx")
             upload_to_bigquery(df.drop(columns=["anio_mes"]), 'big-query-406221.finanzas_personales.historico')
 

@@ -10,7 +10,9 @@ CREATE TABLE `big-query-406221.finanzas_personales.historico` (
     moneda STRING,
     comentario STRING,
     fecha_carga DATETIME,
-    dias_trabajados FLOAT64
+    dias_trabajados FLOAT64,
+    clave STRING,
+    valor STRING
 )
 PARTITION BY fecha;
 
