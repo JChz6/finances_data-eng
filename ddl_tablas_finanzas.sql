@@ -15,6 +15,25 @@ CREATE TABLE `big-query-406221.finanzas_personales.historico` (
 PARTITION BY fecha;
 
 
+
+--DDL EMOCIONAL
+CREATE TABLE `big-query-406221.finanzas_personales.emocional` (
+    fecha DATE,
+    cuenta STRING,
+    categoria STRING,
+    subcategoria STRING,
+    nota STRING,
+    ingreso_gasto STRING,
+    importe FLOAT64,
+    moneda STRING,
+    comentario STRING,
+    fecha_carga DATETIME,
+    clave STRING,
+    valor STRING
+)
+PARTITION BY DATE_TRUNC(fecha, YEAR);
+
+
 --DDL PRESUPUESTOS MENSUALES
 CREATE TABLE `big-query-406221.finanzas_personales.presupuesto`
 (
