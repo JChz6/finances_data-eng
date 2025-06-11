@@ -47,8 +47,8 @@ def delete_old_data_from_bigquery(year_months, table_id):
         logging.info(f"🗑️ Eliminados registros de {year}-{month} en {table_id}")
 
 
-#Cargar los registros
-def upload_to_bigquery(df, table_id):
+#Cargar los registros en histórico
+def upload_to_historico(df, table_id):
     client = bigquery.Client()
     job_config = bigquery.LoadJobConfig(
         write_disposition=bigquery.WriteDisposition.WRITE_APPEND,
@@ -64,6 +64,32 @@ def upload_to_bigquery(df, table_id):
             bigquery.SchemaField("comentario", "STRING"),
             bigquery.SchemaField("fecha_carga", "DATETIME"),
             bigquery.SchemaField("dias_trabajados", "FLOAT64"),
+            bigquery.SchemaField("clave", "STRING"),
+            bigquery.SchemaField("valor", "STRING")
+        ],
+        source_format=bigquery.SourceFormat.PARQUET,
+    )
+    job = client.load_table_from_dataframe(df, table_id, job_config=job_config)
+    job.result()
+    logging.info(f"Cargado {job.output_rows} filas en {table_id}")
+
+
+#Cargar los registros en emocional
+def upload_to_emocional(df, table_id):
+    client = bigquery.Client()
+    job_config = bigquery.LoadJobConfig(
+        write_disposition=bigquery.WriteDisposition.WRITE_APPEND,
+        schema=[
+            bigquery.SchemaField("fecha", "DATE"),
+            bigquery.SchemaField("cuenta", "STRING"),
+            bigquery.SchemaField("categoria", "STRING"),
+            bigquery.SchemaField("subcategoria", "STRING"),
+            bigquery.SchemaField("nota", "STRING"),
+            bigquery.SchemaField("ingreso_gasto", "STRING"),
+            bigquery.SchemaField("importe", "FLOAT64"),
+            bigquery.SchemaField("moneda", "STRING"),
+            bigquery.SchemaField("comentario", "STRING"),
+            bigquery.SchemaField("fecha_carga", "DATETIME"),
             bigquery.SchemaField("clave", "STRING"),
             bigquery.SchemaField("valor", "STRING")
         ],
@@ -121,7 +147,9 @@ def handle_gcs_event(cloud_event):
             
             # Eliminar registros en BigQuery para esos año-mes
             table_id = "big-query-406221.finanzas_personales.historico"
+            emocional = "big-query-406221.finanzas_personales.emocional"
             delete_old_data_from_bigquery(unique_year_months, table_id)
+            delete_old_data_from_bigquery(unique_year_months, emocional)
 
             # Convertir la columna 'comentario' a string, normalizar y buscar la cadena
             mask_dias_trabajados = (
@@ -145,8 +173,12 @@ def handle_gcs_event(cloud_event):
             # Busca claves y valores en la columna "comentario"
             df[['clave', 'valor']] = df['comentario'].str.extract(r'^\s*([^\s/]+/)\s*(\S+)', expand=True)
 
+            df_finanzas = df[df['cuenta'] != 'Personal']
+            df_emocional = df[df['cuenta'] == 'Personal']
+
             logging.info("✅ Datos transformados correctamente para el archivo .xlsx")
-            upload_to_bigquery(df.drop(columns=["anio_mes"]), 'big-query-406221.finanzas_personales.historico')
+            upload_to_historico(df.drop(columns=["anio_mes"]), 'big-query-406221.finanzas_personales.historico')
+            upload_to_emocional(df.drop(columns=["anio_mes", "dias_trabajados"]), 'big-query-406221.finanzas_personales.emocional')
 
         elif file_name.endswith('.csv'):
             df = pd.read_csv(temp_file_path, delimiter = ';', encoding='latin1')
