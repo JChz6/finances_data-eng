@@ -120,7 +120,7 @@ def handle_gcs_event(cloud_event):
 
         if file_name.endswith('.xlsx'):
             df = pd.read_excel(temp_file_path, sheet_name='Sheet1')
-            df.drop(columns=['Importe', 'Cuentas.1'], inplace=True)
+            df.drop(columns=['PEN', 'Cuentas.1'], inplace=True)
             df['Según un período'] = pd.to_datetime(df['Según un período']).dt.date
             df.rename(columns={
                 'Según un período': 'fecha',
