@@ -130,7 +130,7 @@ def handle_gcs_event(cloud_event):
                 'Nota': 'nota',
                 'Ingreso/Gasto': 'ingreso_gasto',
                 'Descripción':'comentario',
-                'PEN': 'importe',
+                'Importe': 'importe',
                 'Moneda': 'moneda'
             }, inplace=True)
             df['categoria'] = df['categoria'].str.strip()
