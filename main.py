@@ -49,7 +49,7 @@ def delete_old_data_from_bigquery(year_months, table_id):
     WHERE {combined_where_clause}
     """
     logging.info(f"Preparando para eliminar registros de {len(year_months)} periodo(s) en {table_id}")
-    logging.debug(f"Consulta a ejecutar: {query}") # Útil para depuración
+    logging.info(f"Consulta a ejecutar: {query}") # Útil para depuración
 
     try:
         # Ejecutar la única consulta de BigQuery
