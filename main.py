@@ -37,14 +37,27 @@ def presup_to_bigquery(df, table_id):
 def delete_old_data_from_bigquery(year_months, table_id):
     client = bigquery.Client()
 
-    for year, month in year_months:
-        query = f"""
-        DELETE FROM `{table_id}`
-        WHERE EXTRACT(YEAR FROM fecha) = {year} AND EXTRACT(MONTH FROM fecha) = {month}
-        """
+    where_conditions = [
+            f"(EXTRACT(YEAR FROM fecha) = {year} AND EXTRACT(MONTH FROM fecha) = {month})"
+            for year, month in year_months
+        ]
+
+    combined_where_clause = " OR ".join(where_conditions)
+
+    query = f"""
+    DELETE FROM `{table_id}`
+    WHERE {combined_where_clause}
+    """
+    logging.info(f"Preparando para eliminar registros de {len(year_months)} periodo(s) en {table_id}")
+    logging.debug(f"Consulta a ejecutar: {query}") # Útil para depuración
+
+    try:
+        # Ejecutar la única consulta de BigQuery
         query_job = client.query(query, job_config=QueryJobConfig())
-        query_job.result()
-        logging.info(f"🗑️ Eliminados registros de {year}-{month} en {table_id}")
+        query_job.result()  # Espera a que el trabajo de eliminación finalice
+        logging.info(f"🗑️ Eliminados exitosamente registros de {len(year_months)} periodo(s) en {table_id}.")
+    except Exception as e:
+        logging.error(f"❌ Error al intentar eliminar registros de {table_id}: {e}")
 
 
 #Cargar los registros en histórico
