@@ -75,7 +75,7 @@ def upload_to_historico(df, table_id):
 
 
 #Cargar los registros en emocional
-def upload_to_emocional(df, table_id):
+def upload_to_table(df, table_id):
     client = bigquery.Client()
     job_config = bigquery.LoadJobConfig(
         write_disposition=bigquery.WriteDisposition.WRITE_APPEND,
@@ -148,7 +148,9 @@ def handle_gcs_event(cloud_event):
             # Eliminar registros en BigQuery para esos año-mes
             table_id = "big-query-406221.finanzas_personales.historico"
             emocional = "big-query-406221.finanzas_personales.emocional"
+            kilometraje = "big-query-406221.finanzas_personales.kilometraje"
             delete_old_data_from_bigquery(unique_year_months, table_id)
+            delete_old_data_from_bigquery(unique_year_months, kilometraje)
             delete_old_data_from_bigquery(unique_year_months, emocional)
 
             # Convertir la columna 'comentario' a string, normalizar y buscar la cadena
@@ -173,12 +175,14 @@ def handle_gcs_event(cloud_event):
             # Busca claves y valores en la columna "comentario"
             df[['clave', 'valor']] = df['comentario'].str.extract(r'^\s*([^\s/]+/)\s*(\S+)', expand=True)
 
-            df_finanzas = df[df['cuenta'] != 'Personal']
+            df_finanzas = df[~df['cuenta'].isin(['Personal', 'Kilometraje'])]
             df_emocional = df[df['cuenta'] == 'Personal']
+            df_kilometraje = df[df['cuenta'] == 'Kilometraje']
 
             logging.info("✅ Datos transformados correctamente para el archivo .xlsx")
             upload_to_historico(df_finanzas.drop(columns=["anio_mes"]), 'big-query-406221.finanzas_personales.historico')
-            upload_to_emocional(df_emocional.drop(columns=["anio_mes", "dias_trabajados"]), 'big-query-406221.finanzas_personales.emocional')
+            upload_to_table(df_emocional.drop(columns=["anio_mes", "dias_trabajados"]), 'big-query-406221.finanzas_personales.emocional')
+            upload_to_table(df_kilometraje.drop(columns=["anio_mes", "dias_trabajados"]), 'big-query-406221.finanzas_personales.kilometraje')
 
         elif file_name.endswith('.csv'):
             df = pd.read_csv(temp_file_path, delimiter = ';', encoding='latin1')
