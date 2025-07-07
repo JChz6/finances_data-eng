@@ -5,6 +5,7 @@ import pytz
 from google.cloud import bigquery, storage
 import functions_framework
 import logging
+import traceback
 from google.cloud.bigquery import QueryJobConfig
 
 
@@ -213,9 +214,13 @@ def handle_gcs_event(cloud_event):
             #presup_to_bigquery_temp(df, 'big-query-406221.finanzas_personales.presupuesto', temp_table_id)
 
 
-
     except Exception as e:
-        logging.error(f"Error procesando el archivo {file_name}: {str(e)}")
+        # Obtiene la información completa del traceback
+        exc_info = traceback.format_exc()
+        
+        # Registra el error, incluyendo el traceback completo
+        logging.error(f"Error procesando el archivo {file_name}:\n{exc_info}")
+
 
     finally:
         # Eliminar el archivo local después de la carga

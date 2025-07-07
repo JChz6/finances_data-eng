@@ -87,18 +87,18 @@ ORDER BY anio DESC, mes DESC
 
 
 --DDL Gasto AGREGADO diariamente VS presupuesto POR CATEGORÍA
+--DDL Gasto AGREGADO diariamente VS presupuesto POR CATEGORÍA
 CREATE OR REPLACE VIEW `big-query-406221.finanzas_personales.agregado` AS(
 SELECT
   DATE_TRUNC(h.fecha, MONTH) AS fecha, h.categoria,
-  SUM(h.importe) OVER(PARTITION BY EXTRACT(YEAR FROM h.fecha) , EXTRACT(MONTH FROM h.fecha), h.categoria) as gasto_acumulado_mes,
+  SUM(h.importe) OVER(PARTITION BY DATE_TRUNC(h.fecha, MONTH), h.categoria) as gasto_acumulado_mes,
   p.presupuesto,
 FROM `big-query-406221.finanzas_personales.historico` h
 LEFT JOIN `big-query-406221.finanzas_personales.presupuesto` p
  ON UPPER(h.categoria) = UPPER(p.categoria) AND
-    CAST(p.month AS INT64) = EXTRACT(MONTH FROM h.fecha) AND
-    CAST(p.year AS INT64) = EXTRACT(YEAR FROM h.fecha)
+    DATE_TRUNC(p.fecha, MONTH) = DATE_TRUNC(h.fecha, MONTH) 
  WHERE h.ingreso_gasto =  "Gastos"
- QUALIFY ROW_NUMBER() OVER(PARTITION BY EXTRACT(MONTH FROM h.fecha), categoria) = 1
+ QUALIFY ROW_NUMBER() OVER(PARTITION BY DATE_TRUNC(h.fecha, MONTH), categoria) = 1
  ORDER BY DATE_TRUNC(h.fecha, MONTH) DESC, h.categoria
 );
 
