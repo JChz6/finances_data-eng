@@ -147,8 +147,8 @@ def handle_gcs_event(cloud_event):
                 'Importe': 'importe',
                 'Moneda': 'moneda'
             }, inplace=True)
-            df['categoria'] = df['categoria'].str.strip()
-            df['subcategoria'] = df['subcategoria'].str.strip()
+            df['categoria'] = df['categoria'].astype(str).str.strip()
+            df['subcategoria'] = df['subcategoria'].astype(str).str.strip()
             df['nota'] = df['nota'].str.strip()
             df['ingreso_gasto'] = df['ingreso_gasto'].str.strip()
             df['comentario'] = df['comentario'].str.strip()
