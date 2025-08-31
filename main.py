@@ -187,7 +187,12 @@ def handle_gcs_event(cloud_event):
             
 
             # Busca claves y valores en la columna "comentario"
-            df[['clave', 'valor']] = df['comentario'].str.extract(r'^\s*([^\s/]+/)\s*(\S+)', expand=True)
+            # Aplica la lógica para la clave "C/ "
+            df.loc[df['comentario'].str.startswith('C/ '), ['clave', 'valor']] = df.loc[df['comentario'].str.startswith('C/ '), 'comentario'].str.extract(r'^\s*([^\s/]+/)\s*(\S+)', expand=True)
+
+            # Aplica la lógica para las demás claves en el bloque 'else'
+            df.loc[~df['comentario'].str.startswith('C/ '), ['clave', 'valor']] = df.loc[~df['comentario'].str.startswith('C/ '), 'comentario'].str.extract(r'^\s*([^\s/]+/)\s*(.*)', expand=True)
+
 
             df_finanzas = df[~df['cuenta'].isin(['Personal', 'Kilometraje'])]
             df_emocional = df[df['cuenta'] == 'Personal']
