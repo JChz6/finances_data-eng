@@ -186,13 +186,22 @@ def handle_gcs_event(cloud_event):
                 )
             
 
-            # Busca claves y valores en la columna "comentario"
-            # Aplica la lógica para la clave "C/ "
-            df.loc[df['comentario'].str.startswith('C/ '), ['clave', 'valor']] = df.loc[df['comentario'].str.startswith('C/ '), 'comentario'].str.extract(r'^\s*([^\s/]+/)\s*(\S+)', expand=True)
+            # Máscara para "C/ "
+            mask_c = df['comentario'].astype(str).str.startswith("C/ ")
 
-            # Aplica la lógica para las demás claves en el bloque 'else'
-            df.loc[~df['comentario'].str.startswith('C/ '), ['clave', 'valor']] = df.loc[~df['comentario'].str.startswith('C/ '), 'comentario'].str.extract(r'^\s*([^\s/]+/)\s*(.*)', expand=True)
+            # Caso 1: Clave = "C/" → extrae solo la primera palabra después de "C/"
+            df.loc[mask_c, ['clave', 'valor']] = (
+                df.loc[mask_c, 'comentario']
+                .str.extract(r'^\s*(C/)\s*(\S+)', expand=True)
+            )
 
+            # Caso 2: Otras claves (ej. Inm/, A/, reembolso/, etc.) → extrae todo el resto del comentario
+            mask_otros = ~mask_c & df['comentario'].astype(str).str.match(r'^\s*[^\s/]+/\s+')
+
+            df.loc[mask_otros, ['clave', 'valor']] = (
+                df.loc[mask_otros, 'comentario']
+                .str.extract(r'^\s*([^\s/]+/)\s+(.+)', expand=True)
+            )
 
             df_finanzas = df[~df['cuenta'].isin(['Personal', 'Kilometraje'])]
             df_emocional = df[df['cuenta'] == 'Personal']
