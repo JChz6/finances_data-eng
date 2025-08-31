@@ -288,3 +288,42 @@ CREATE OR REPLACE VIEW `big-query-406221.finanzas_personales.ingresos_resumen` A
   ORDER BY anio desc , mes desc
 )
     
+
+
+--DDL Balance de inversiones inmobiliarias
+CREATE OR REPLACE VIEW `big-query-406221.finanzas_personales.inmuebles` AS(
+SELECT
+  fecha,
+  DATE_TRUNC(fecha, MONTH) AS fecha_trunc,
+  EXTRACT(YEAR FROM fecha) AS anio,
+  EXTRACT(MONTH FROM fecha) AS mes,
+  nota,
+  valor,
+  importe,
+  ROUND(
+    SUM(CASE WHEN categoria != 'Reembolsos' AND ingreso_gasto = 'Ingreso' AND subcategoria = 'Inmuebles' AND clave = 'Inm/' THEN importe ELSE 0 END)
+    OVER (PARTITION BY DATE_TRUNC(fecha, MONTH), valor),
+    2
+  ) AS ingreso_inmueble,
+  ROUND(
+    SUM(CASE WHEN ingreso_gasto = 'Gastos' AND categoria = 'Inversiones' AND clave = 'Inm/' THEN importe ELSE 0 END)
+    OVER (PARTITION BY DATE_TRUNC(fecha, MONTH), valor),
+    2
+  ) AS gastos_inmueble,
+  ROUND(
+    (SUM(CASE WHEN categoria != 'Reembolsos' AND ingreso_gasto = 'Ingreso' AND subcategoria = 'Inmuebles' AND clave = 'Inm/' THEN importe ELSE 0 END)
+    OVER (PARTITION BY DATE_TRUNC(fecha, MONTH), valor)) -
+    (SUM(CASE WHEN ingreso_gasto = 'Gastos' AND categoria = 'Inversiones' AND clave = 'Inm/' THEN importe ELSE 0 END)
+    OVER (PARTITION BY DATE_TRUNC(fecha, MONTH), valor)),
+    2
+  ) AS balance,
+  comentario
+FROM
+  `big-query-406221.finanzas_personales.historico`
+WHERE clave = 'Inm/'
+ORDER BY
+  anio DESC,
+  mes DESC,
+  fecha_trunc,
+  valor
+);
