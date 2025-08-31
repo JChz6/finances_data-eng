@@ -186,6 +186,9 @@ def handle_gcs_event(cloud_event):
                 )
             
 
+            df['clave'] = None
+            df['valor'] = None
+
             # Máscara para "C/ "
             mask_c = df['comentario'].astype(str).str.startswith("C/ ")
 
