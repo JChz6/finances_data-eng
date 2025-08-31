@@ -186,25 +186,28 @@ def handle_gcs_event(cloud_event):
                 )
             
 
-            df['clave'] = None
-            df['valor'] = None
+            coment = df['comentario'].astype(str)
 
-            # Máscara para "C/ "
-            mask_c = df['comentario'].astype(str).str.startswith("C/ ")
+            # a) Filas que comienzan con cualquier "Clave/ " (con posibles espacios al inicio)
+            mask_tiene_clave = coment.str.match(r'^\s*[^\s/]+/\s+')
+            
+            # b) Caso especial: "C/ " (acepta espacios al inicio)
+            mask_c = coment.str.match(r'^\s*C/\s+')
 
-            # Caso 1: Clave = "C/" → extrae solo la primera palabra después de "C/"
-            df.loc[mask_c, ['clave', 'valor']] = (
-                df.loc[mask_c, 'comentario']
-                .str.extract(r'^\s*(C/)\s*(\S+)', expand=True)
-            )
+            # c) Otras claves distintas a "C/ "
+            mask_otros = mask_tiene_clave & ~mask_c
 
-            # Caso 2: Otras claves (ej. Inm/, A/, reembolso/, etc.) → extrae todo el resto del comentario
-            mask_otros = ~mask_c & df['comentario'].astype(str).str.match(r'^\s*[^\s/]+/\s+')
+            # --- Caso 1: "C/ " → clave = "C/", valor = primera palabra
+            tmp_c = coment[mask_c].str.extract(r'^\s*(C/)\s+(\S+)', expand=True)
+            tmp_c.columns = ['clave', 'valor']
+            df.loc[mask_c, ['clave', 'valor']] = tmp_c.to_numpy()
 
-            df.loc[mask_otros, ['clave', 'valor']] = (
-                df.loc[mask_otros, 'comentario']
-                .str.extract(r'^\s*([^\s/]+/)\s+(.+)', expand=True)
-            )
+            # --- Caso 2: Otras claves → clave = "X/", valor = TODO el resto del comentario
+            tmp_o = coment[mask_otros].str.extract(r'^\s*([^\s/]+/)\s+(.+)', expand=True)
+            tmp_o.columns = ['clave', 'valor']
+            df.loc[mask_otros, ['clave', 'valor']] = tmp_o.to_numpy()
+
+
 
             df_finanzas = df[~df['cuenta'].isin(['Personal', 'Kilometraje'])]
             df_emocional = df[df['cuenta'] == 'Personal']
