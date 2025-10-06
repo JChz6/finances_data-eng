@@ -200,6 +200,26 @@ def handle_gcs_event(cloud_event):
 
             coment = df['comentario'].astype(str)
 
+
+            # a) Filas que comienzan con cualquier "Clave/ " (con posibles espacios al inicio)
+            mask_tiene_clave = coment.str.match(r'^\s*[^\s/]+/\s+')
+            
+            # b) Caso especial: "C/ " (acepta espacios al inicio)
+            mask_c = coment.str.match(r'^\s*C/\s+')
+
+            # c) Otras claves distintas a "C/ "
+            mask_otros = mask_tiene_clave & ~mask_c
+
+            # --- Caso 1: "C/ " → clave = "C/", valor = primera palabra
+            tmp_c = coment[mask_c].str.extract(r'^\s*(C/)\s+(\S+)', expand=True)
+            tmp_c.columns = ['clave', 'valor']
+            df.loc[mask_c, ['clave', 'valor']] = tmp_c.to_numpy()
+
+            # --- Caso 2: Otras claves → clave = "X/", valor = TODO el resto del comentario
+            tmp_o = coment[mask_otros].str.extract(r'^\s*([^\s/]+/)\s+(.+)', expand=True)
+            tmp_o.columns = ['clave', 'valor']
+            df.loc[mask_otros, ['clave', 'valor']] = tmp_o.to_numpy()
+
             columnas_ordenadas = [
                 'fecha',
                 'cuenta',
@@ -221,27 +241,6 @@ def handle_gcs_event(cloud_event):
             ]
 
             df = df[columnas_ordenadas] 
-
-            # a) Filas que comienzan con cualquier "Clave/ " (con posibles espacios al inicio)
-            mask_tiene_clave = coment.str.match(r'^\s*[^\s/]+/\s+')
-            
-            # b) Caso especial: "C/ " (acepta espacios al inicio)
-            mask_c = coment.str.match(r'^\s*C/\s+')
-
-            # c) Otras claves distintas a "C/ "
-            mask_otros = mask_tiene_clave & ~mask_c
-
-            # --- Caso 1: "C/ " → clave = "C/", valor = primera palabra
-            tmp_c = coment[mask_c].str.extract(r'^\s*(C/)\s+(\S+)', expand=True)
-            tmp_c.columns = ['clave', 'valor']
-            df.loc[mask_c, ['clave', 'valor']] = tmp_c.to_numpy()
-
-            # --- Caso 2: Otras claves → clave = "X/", valor = TODO el resto del comentario
-            tmp_o = coment[mask_otros].str.extract(r'^\s*([^\s/]+/)\s+(.+)', expand=True)
-            tmp_o.columns = ['clave', 'valor']
-            df.loc[mask_otros, ['clave', 'valor']] = tmp_o.to_numpy()
-
-
 
             df_finanzas = df[~df['cuenta'].isin(['Personal', 'Kilometraje'])]
             df_emocional = df[df['cuenta'] == 'Personal']
