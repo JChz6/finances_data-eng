@@ -248,8 +248,8 @@ def handle_gcs_event(cloud_event):
 
             logging.info("✅ Datos transformados correctamente para el archivo .xlsx")
             upload_to_historico(df_finanzas, 'big-query-406221.finanzas_personales.historico')
-            upload_to_table(df_emocional.drop(columns=["dias_trabajados"]), 'big-query-406221.finanzas_personales.emocional')
-            upload_to_table(df_kilometraje.drop(columns=["dias_trabajados"]), 'big-query-406221.finanzas_personales.kilometraje')
+            upload_to_table(df_emocional.drop(columns=["tipo_cambio", "importe_nativo", "moneda_nativo", "dias_trabajados"]), 'big-query-406221.finanzas_personales.emocional')
+            upload_to_table(df_kilometraje.drop(columns=["tipo_cambio", "importe_nativo", "moneda_nativo", "dias_trabajados"]), 'big-query-406221.finanzas_personales.kilometraje')
 
         elif file_name.endswith('.csv'):
             df = pd.read_csv(temp_file_path, delimiter = ';', encoding='latin1')

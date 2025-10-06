@@ -33,9 +33,9 @@ CREATE OR REPLACE TABLE `big-query-406221.finanzas_personales.emocional` (
     importe_soles FLOAT64,
     moneda_cambio STRING,
     comentario STRING,
-    fecha_carga DATETIME,
     clave STRING,
-    valor STRING
+    valor STRING,
+    fecha_carga DATETIME
 )
 PARTITION BY DATE_TRUNC(fecha, YEAR);
 
@@ -51,9 +51,9 @@ CREATE OR REPLACE TABLE `big-query-406221.finanzas_personales.emocional` (
     importe_soles FLOAT64,
     moneda_cambio STRING,
     comentario STRING,
-    fecha_carga DATETIME,
     clave STRING,
-    valor STRING
+    valor STRING,
+    fecha_carga DATETIME
 )
 PARTITION BY DATE_TRUNC(fecha, YEAR);
 
