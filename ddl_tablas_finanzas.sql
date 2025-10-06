@@ -23,15 +23,15 @@ PARTITION BY DATE_TRUNC(fecha, YEAR);
 
 
 --DDL EMOCIONAL
-CREATE TABLE `big-query-406221.finanzas_personales.emocional` (
+CREATE OR REPLACE TABLE `big-query-406221.finanzas_personales.emocional` (
     fecha DATE,
     cuenta STRING,
     categoria STRING,
     subcategoria STRING,
     nota STRING,
     ingreso_gasto STRING,
-    importe FLOAT64,
-    moneda STRING,
+    importe_soles FLOAT64,
+    moneda_cambio STRING,
     comentario STRING,
     fecha_carga DATETIME,
     clave STRING,
@@ -41,15 +41,15 @@ PARTITION BY DATE_TRUNC(fecha, YEAR);
 
 
 --DDL EMOCIONAL
-CREATE TABLE `big-query-406221.finanzas_personales.emocional` (
+CREATE OR REPLACE TABLE `big-query-406221.finanzas_personales.emocional` (
     fecha DATE,
     cuenta STRING,
     categoria STRING,
     subcategoria STRING,
     nota STRING,
     ingreso_gasto STRING,
-    importe FLOAT64,
-    moneda STRING,
+    importe_soles FLOAT64,
+    moneda_cambio STRING,
     comentario STRING,
     fecha_carga DATETIME,
     clave STRING,

@@ -105,8 +105,8 @@ def upload_to_table(df, table_id):
             bigquery.SchemaField("subcategoria", "STRING"),
             bigquery.SchemaField("nota", "STRING"),
             bigquery.SchemaField("ingreso_gasto", "STRING"),
-            bigquery.SchemaField("importe", "FLOAT64"),
-            bigquery.SchemaField("moneda", "STRING"),
+            bigquery.SchemaField("importe_soles", "FLOAT64"),
+            bigquery.SchemaField("moneda_cambio", "STRING"),
             bigquery.SchemaField("comentario", "STRING"),
             bigquery.SchemaField("fecha_carga", "DATETIME"),
             bigquery.SchemaField("clave", "STRING"),
@@ -140,7 +140,7 @@ def handle_gcs_event(cloud_event):
         if file_name.endswith('.xlsx'):
             df = pd.read_excel(temp_file_path, sheet_name='Sheet1')
 
-            df['moneda_nativo'] = np.where(df['Cuentas'] == df['PEN'], 'PEN', df['Moneda'])
+            df['moneda_nativo'] = np.where(df['Cuentas.1'] == df['PEN'], 'PEN', df['Moneda'])
             
 
             df['Según un período'] = pd.to_datetime(df['Según un período']).dt.date
