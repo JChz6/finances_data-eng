@@ -1,18 +1,22 @@
 --DDL HISTORICO
-CREATE TABLE `big-query-406221.finanzas_personales.historico` (
+CREATE OR REPLACE TABLE `big-query-406221.finanzas_personales.historico` (
     fecha DATE,
     cuenta STRING,
     categoria STRING,
     subcategoria STRING,
     nota STRING,
     ingreso_gasto STRING,
-    importe FLOAT64,
-    moneda STRING,
+    importe_soles FLOAT64,
+    importe_cambio FLOAT64,
+    moneda_cambio STRING,
+    tipo_cambio FLOAT64, 
+    importe_nativo FLOAT64,
+    moneda_nativo STRING,
     comentario STRING,
-    fecha_carga DATETIME,
     dias_trabajados FLOAT64,
     clave STRING,
-    valor STRING
+    valor STRING,
+    fecha_carga DATETIME
 )
 PARTITION BY DATE_TRUNC(fecha, YEAR);
 

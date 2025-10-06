@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+import numpy as np
 from datetime import datetime
 import pytz
 from google.cloud import bigquery, storage
@@ -73,13 +74,17 @@ def upload_to_historico(df, table_id):
             bigquery.SchemaField("subcategoria", "STRING"),
             bigquery.SchemaField("nota", "STRING"),
             bigquery.SchemaField("ingreso_gasto", "STRING"),
-            bigquery.SchemaField("importe", "FLOAT64"),
-            bigquery.SchemaField("moneda", "STRING"),
+            bigquery.SchemaField("importe_soles", "FLOAT64"),
+            bigquery.SchemaField("importe_cambio", "FLOAT64"),
+            bigquery.SchemaField("moneda_cambio", "STRING"),
+            bigquery.SchemaField("tipo_cambio", "STRING"),
+            bigquery.SchemaField("importe_nativo", "FLOAT64"),
+            bigquery.SchemaField("moneda_nativo", "STRING"),
             bigquery.SchemaField("comentario", "STRING"),
-            bigquery.SchemaField("fecha_carga", "DATETIME"),
             bigquery.SchemaField("dias_trabajados", "FLOAT64"),
             bigquery.SchemaField("clave", "STRING"),
-            bigquery.SchemaField("valor", "STRING")
+            bigquery.SchemaField("valor", "STRING"),
+            bigquery.SchemaField("fecha_carga", "DATETIME")
         ],
         source_format=bigquery.SourceFormat.PARQUET,
     )
@@ -134,7 +139,10 @@ def handle_gcs_event(cloud_event):
 
         if file_name.endswith('.xlsx'):
             df = pd.read_excel(temp_file_path, sheet_name='Sheet1')
-            df.drop(columns=['PEN', 'Cuentas.1'], inplace=True)
+
+            df['moneda_nativo'] = np.where(df['Cuentas'] == df['PEN'], 'PEN', df['Moneda'])
+            
+
             df['Según un período'] = pd.to_datetime(df['Según un período']).dt.date
             df.rename(columns={
                 'Según un período': 'fecha',
@@ -143,9 +151,11 @@ def handle_gcs_event(cloud_event):
                 'Subcategorías': 'subcategoria',
                 'Nota': 'nota',
                 'Ingreso/Gasto': 'ingreso_gasto',
-                'Descripción':'comentario',
-                'Importe': 'importe',
-                'Moneda': 'moneda'
+                'PEN': 'importe_soles',
+                'Importe': 'importe_cambio',
+                'Moneda': 'moneda_cambio',
+                'Cuentas.1': 'importe_nativo',
+                'Descripción':'comentario'
             }, inplace=True)
             df['categoria'] = df['categoria'].str.strip()
             df['subcategoria'] = df['subcategoria'].str.strip()
@@ -154,9 +164,11 @@ def handle_gcs_event(cloud_event):
             df['comentario'] = df['comentario'].str.strip()
             df['fecha_carga'] = datetime.now(pytz.utc).astimezone(utc_minus_5)
             df['fecha_carga'] = df['fecha_carga'].dt.tz_localize(None)
+            df['tipo_cambio'] = round(df['importe_soles']/df['importe_cambio'], 4)
             
             #  Extraer año-mes únicos
             df["anio_mes"] = df["fecha"].apply(lambda x: (x.year, x.month))
+
             unique_year_months = df["anio_mes"].drop_duplicates().tolist()
             
             # Eliminar registros en BigQuery para esos año-mes
@@ -187,6 +199,28 @@ def handle_gcs_event(cloud_event):
             
 
             coment = df['comentario'].astype(str)
+
+            columnas_ordenadas = [
+                'fecha',
+                'cuenta',
+                'categoria',
+                'subcategoria',
+                'nota',
+                'ingreso_gasto',
+                'importe_soles',
+                'importe_cambio',
+                'moneda_cambio',
+                'tipo_cambio',
+                'importe_nativo',
+                'moneda_nativo',
+                'comentario',
+                'dias_trabajados',
+                'clave',
+                'valor',
+                'fecha_carga'
+            ]
+
+            df = df[columnas_ordenadas] 
 
             # a) Filas que comienzan con cualquier "Clave/ " (con posibles espacios al inicio)
             mask_tiene_clave = coment.str.match(r'^\s*[^\s/]+/\s+')
