@@ -77,7 +77,7 @@ def upload_to_historico(df, table_id):
             bigquery.SchemaField("importe_soles", "FLOAT64"),
             bigquery.SchemaField("importe_cambio", "FLOAT64"),
             bigquery.SchemaField("moneda_cambio", "STRING"),
-            bigquery.SchemaField("tipo_cambio", "STRING"),
+            bigquery.SchemaField("tipo_cambio", "FLOAT64"),
             bigquery.SchemaField("importe_nativo", "FLOAT64"),
             bigquery.SchemaField("moneda_nativo", "STRING"),
             bigquery.SchemaField("comentario", "STRING"),
