@@ -1,5 +1,7 @@
-#!pip install google-cloud-storage
+#!/home/cheesus/Documents/finanzas_personales/finances_data-eng/venv/bin/python
 
+#!pip install google-cloud-storage
+import sys
 import os
 import argparse
 from google.cloud import storage
@@ -9,8 +11,11 @@ def upload_to_gcs(local_file_path, bucket_name="finanzas_personales_raw", destin
     if destination_blob_name is None:
         destination_blob_name = os.path.basename(local_file_path)  # Usa el mismo nombre del archivo local
     
-    client = storage.Client.from_service_account_json("creds_trabajador_gcs.json")
-    
+    SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+    CREDS_PATH = os.path.join(SCRIPT_DIR, "creds_trabajador_gcs.json")
+
+    client = storage.Client.from_service_account_json(CREDS_PATH)
+
     bucket = client.bucket(bucket_name)
     
     blob = bucket.blob(destination_blob_name)
