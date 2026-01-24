@@ -91,9 +91,10 @@ def upload_to_historico(df, table_id):
     job = client.load_table_from_dataframe(df, table_id, job_config=job_config)
     job.result()
 
-    query_recarga = """
+    query_trunc = """
         TRUNCATE TABLE `big-query-406221.finanzas_personales.agregado_remoto`;
-
+		"""
+    query_carga = """
         INSERT INTO `big-query-406221.finanzas_personales.agregado_remoto`
         SELECT
             fecha,
@@ -106,10 +107,13 @@ def upload_to_historico(df, table_id):
         WHERE presupuesto IS NOT NULL
         AND fecha = DATE_TRUNC(CURRENT_DATE('America/Lima'), MONTH)
         ;
-    """
+		"""
 
-    job_sp = client.query(query_recarga)
-    job_sp.result()
+    job_trunc = client.query(query_trunc)
+    job_trunc.result()
+    
+    job_carga = client.query(query_carga)
+    job_carga.result()
 
     logging.info(f"Cargado {job.output_rows} filas en {table_id}")
 
