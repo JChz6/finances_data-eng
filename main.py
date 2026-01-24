@@ -92,8 +92,20 @@ def upload_to_historico(df, table_id):
     job.result()
 
     query_recarga = """
-    TRUNCATE TABLE `big-query-406221.finanzas_personales.agregado_remoto`; 
-    CALL `big-query-406221.finanzas_personales.recargar_agregado_remoto`();
+        TRUNCATE TABLE `big-query-406221.finanzas_personales.agregado_remoto`;
+
+        INSERT INTO `big-query-406221.finanzas_personales.agregado_remoto`
+        SELECT
+            fecha,
+            categoria, 
+            ROUND(gasto_acumulado_mes, 2) gasto_mes,
+            presupuesto,
+            CONCAT(ROUND((gasto_acumulado_mes/ presupuesto)*100, 2), '%') as porcentaje,
+            ROUND((presupuesto - gasto_acumulado_mes), 2) AS presupuesto_restante
+        FROM `big-query-406221.finanzas_personales.agregado`
+        WHERE presupuesto IS NOT NULL
+        AND fecha = DATE_TRUNC(CURRENT_DATE('America/Lima'), MONTH)
+        ;
     """
 
     job_sp = client.query(query_recarga)
