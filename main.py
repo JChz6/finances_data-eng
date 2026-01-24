@@ -62,6 +62,35 @@ def delete_old_data_from_bigquery(year_months, table_id):
         logging.error(f"❌ Error al intentar eliminar registros de {table_id}: {e}")
 
 
+#Actualizar la tabla remota
+def upload_to_remoto():
+    client = bigquery.Client()
+    
+    query_trunc = """
+        TRUNCATE TABLE `big-query-406221.finanzas_personales.agregado_remoto`;
+		"""
+    query_carga = """
+        INSERT INTO `big-query-406221.finanzas_personales.agregado_remoto`
+        SELECT
+            fecha,
+            categoria, 
+            ROUND(gasto_acumulado_mes, 2) gasto_mes,
+            presupuesto,
+            CONCAT(ROUND((gasto_acumulado_mes/ presupuesto)*100, 2), '%') as porcentaje,
+            ROUND((presupuesto - gasto_acumulado_mes), 2) AS presupuesto_restante
+        FROM `big-query-406221.finanzas_personales.agregado`
+        WHERE presupuesto IS NOT NULL
+        AND fecha = DATE_TRUNC(CURRENT_DATE('America/Lima'), MONTH)
+        ;
+		"""
+
+    job_trunc = client.query(query_trunc)
+    job_trunc.result()
+    
+    job_carga = client.query(query_carga)
+    job_carga.result()
+
+
 #Cargar los registros en histórico
 def upload_to_historico(df, table_id):
     client = bigquery.Client()
@@ -90,31 +119,7 @@ def upload_to_historico(df, table_id):
     )
     job = client.load_table_from_dataframe(df, table_id, job_config=job_config)
     job.result()
-
-    query_trunc = """
-        TRUNCATE TABLE `big-query-406221.finanzas_personales.agregado_remoto`;
-		"""
-    query_carga = """
-        INSERT INTO `big-query-406221.finanzas_personales.agregado_remoto`
-        SELECT
-            fecha,
-            categoria, 
-            ROUND(gasto_acumulado_mes, 2) gasto_mes,
-            presupuesto,
-            CONCAT(ROUND((gasto_acumulado_mes/ presupuesto)*100, 2), '%') as porcentaje,
-            ROUND((presupuesto - gasto_acumulado_mes), 2) AS presupuesto_restante
-        FROM `big-query-406221.finanzas_personales.agregado`
-        WHERE presupuesto IS NOT NULL
-        AND fecha = DATE_TRUNC(CURRENT_DATE('America/Lima'), MONTH)
-        ;
-		"""
-
-    job_trunc = client.query(query_trunc)
-    job_trunc.result()
     
-    job_carga = client.query(query_carga)
-    job_carga.result()
-
     logging.info(f"Cargado {job.output_rows} filas en {table_id}")
 
 
@@ -276,6 +281,8 @@ def handle_gcs_event(cloud_event):
             upload_to_historico(df_finanzas, 'big-query-406221.finanzas_personales.historico')
             upload_to_table(df_emocional.drop(columns=["importe_cambio", "tipo_cambio", "importe_nativo", "moneda_nativo", "dias_trabajados"]), 'big-query-406221.finanzas_personales.emocional')
             upload_to_table(df_kilometraje.drop(columns=["importe_cambio", "tipo_cambio", "importe_nativo", "moneda_nativo", "dias_trabajados"]), 'big-query-406221.finanzas_personales.kilometraje')
+            upload_to_remoto()
+
 
         elif file_name.endswith('.csv'):
             df = pd.read_csv(temp_file_path, delimiter = ';', encoding='latin1')
