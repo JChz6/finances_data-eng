@@ -116,6 +116,14 @@ def upload_to_table(df, table_id):
     )
     job = client.load_table_from_dataframe(df, table_id, job_config=job_config)
     job.result()
+
+    query = """
+    CALL `big-query-406221.finanzas_personales.recargar_agregado_remoto`();
+    """
+
+    job_sp = client.query(query)
+    job_sp.result()
+
     logging.info(f"Cargado {job.output_rows} filas en {table_id}")
 
 #Funcion de entrada
