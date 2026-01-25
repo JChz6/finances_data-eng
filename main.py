@@ -86,11 +86,9 @@ def upload_to_remoto():
 
     job_trunc = client.query(query_trunc)
     job_trunc.result()
-    logging.info(f"Eliminado {job_trunc.output_rows} filas de remoto")
 
     job_carga = client.query(query_carga)
     job_carga.result()
-    logging.info(f"Cargado {job_carga.output_rows} filas de remoto")
 
 
 #Cargar los registros en histórico
