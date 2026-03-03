@@ -159,11 +159,11 @@ def handle_gcs_event(cloud_event):
                 'Cuentas.1': 'importe_nativo',
                 'Descripción':'comentario'
             }, inplace=True)
-            df['categoria'] = df['categoria'].str.strip()
-            df['subcategoria'] = df['subcategoria'].str.strip()
-            df['nota'] = df['nota'].str.strip()
-            df['ingreso_gasto'] = df['ingreso_gasto'].str.strip()
-            df['comentario'] = df['comentario'].str.strip()
+            df['categoria'] = df['categoria'].astype('string').str.strip()
+            df['subcategoria'] = df['subcategoria'].astype('string').str.strip()
+            df['nota'] = df['nota'].astype('string').str.strip()
+            df['ingreso_gasto'] = df['ingreso_gasto'].astype('string').str.strip()
+            df['comentario'] = df['comentario'].astype('string').str.strip()
             df['fecha_carga'] = datetime.now(pytz.utc).astimezone(utc_minus_5)
             df['fecha_carga'] = df['fecha_carga'].dt.tz_localize(None)
             df['tipo_cambio'] = round(df['importe_soles']/df['importe_cambio'], 4)
