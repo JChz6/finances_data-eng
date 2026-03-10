@@ -132,7 +132,8 @@ def handle_gcs_event(cloud_event):
     storage_client = storage.Client()
     bucket = storage_client.bucket(bucket_name)
     blob = bucket.blob(file_name)
-    temp_file_path = f"/tmp/{file_name}"
+    #temp_file_path = f"/tmp/{file_name}"
+    temp_file_path = f"/tmp/{os.path.basename(file_name)}"
 
     try:
         logging.info(f"Descargando archivo {file_name} desde el bucket {bucket_name}")
@@ -253,21 +254,6 @@ def handle_gcs_event(cloud_event):
             upload_to_table(df_emocional.drop(columns=["importe_cambio", "tipo_cambio", "importe_nativo", "moneda_nativo", "dias_trabajados"]), 'big-query-406221.finanzas_personales.emocional')
             upload_to_table(df_kilometraje.drop(columns=["importe_cambio", "tipo_cambio", "importe_nativo", "moneda_nativo", "dias_trabajados"]), 'big-query-406221.finanzas_personales.kilometraje')
 
-
-        elif file_name.endswith('.csv'):
-            df = pd.read_csv(temp_file_path, delimiter = ';', encoding='latin1')
-            # Realizar las transformaciones necesarias y cargar a BigQuery
-            df = df.dropna(subset=['fecha'])
-            df['fecha'] = pd.to_datetime(df['fecha']).dt.strftime('%Y-%m-%d')
-            df['fecha'] = pd.to_datetime(df['fecha'])
-            df['year'] = df['year'].astype(int).astype(str)
-            df['month'] = df['month'].astype(int).astype(str) 
-            df = df[['fecha', 'year', 'month', 'categoria', 'presupuesto']]
-            df = df.dropna(subset=['fecha'])
-            logging.info("Datos transformados correctamente para el archivo .csv")
-            
-            temp_table_id = "big-query-406221.finanzas_personales.temp_presupuesto"
-            #presup_to_bigquery_temp(df, 'big-query-406221.finanzas_personales.presupuesto', temp_table_id)
 
 
     except Exception as e:
